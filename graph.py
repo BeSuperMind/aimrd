@@ -17,3 +17,4 @@ def plot_graph(stationary_count, moving_count):
     plt.title('Time Spent Stationary vs Moving')
     plt.ylim(0, 100)
     plt.show()
+    plt.savefig('stationary_vs_moving.png')

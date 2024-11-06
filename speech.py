@@ -1,6 +1,6 @@
 import speech_recognition as sr
-import requests  
-from text_to_speech import text_to_speech_sync
+import requests  # To check for internet connectivity
+from text_to_speech import text_to_speech
 
 def check_internet_connection():
     """Check if the internet connection is available."""
@@ -19,7 +19,7 @@ def getQuery(mixer):
             recognizer.adjust_for_ambient_noise(mic, duration=0.5)
             audio = recognizer.listen(mic, timeout=5)
             print("Audio captured successfully!")
-            text_to_speech_sync('Audio captured successfully!', mixer)
+            text_to_speech('Audio captured successfully!', mixer)
 
             # Check for internet connectivity before trying to recognize speech
             if check_internet_connection():
@@ -31,22 +31,22 @@ def getQuery(mixer):
 
                 except sr.UnknownValueError:
                     print("Could not understand the audio.")
-                    text_to_speech_sync('Could not understand the audio.', mixer)
+                    text_to_speech('Could not understand the audio.', mixer)
                     return 'error'
 
                 except sr.RequestError as e:
                     print(f"Could not request results from Google Speech Recognition; {e}")
-                    text_to_speech_sync(f"Could not request results from Google Speech Recognition; {e}",mixer)
+                    text_to_speech(f"Could not request results from Google Speech Recognition; {e}",mixer)
                     return 'error'
 
             else:
                 print("No internet connection.")
-                text_to_speech_sync('No internet connection.', mixer)
+                text_to_speech('No internet connection.', mixer)
                 return '503'
 
     except sr.WaitTimeoutError:
         print("Listening timed out while waiting for phrase to start")
-        text_to_speech_sync('Listening timed out while waiting for phrase to start', mixer)
+        text_to_speech('Listening timed out while waiting for phrase to start', mixer)
         return 'error'
 
     except Exception as e:

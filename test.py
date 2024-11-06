@@ -1,8 +1,9 @@
-import cv2, asyncio, numpy as np
-from keras.models import load_model
+import cv2
+import asyncio
+import numpy as np
+from tensorflow.keras.models import load_model
 from graph import plot_graph
-from field import BlueField  
-from text_to_speech import text_to_speech, text_to_speech_sync  
+from text_to_speech import text_to_speech, text_to_speech_async  
 from pygame import mixer
 from drowziness import DrowsinessCheck
 from start import starter
@@ -11,65 +12,58 @@ from start import starter
 mixer.init()
 
 # Load the new combined model for emotion and eye detection
-combined_model = load_model('models/combined_model_50_epoch_with_pt001_LR.h5')
+combined_model = load_model('emotion_eye_combined_model_with_200_epochs.h5')
 
 # Load Haar Cascade classifiers for face and eye detection
-faceDetect = cv2.CascadeClassifier('haar cascade files/haarcascade_frontalface_default.xml')
+faceDetect = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 leye = cv2.CascadeClassifier('haar cascade files/haarcascade_lefteye_2splits.xml')
 reye = cv2.CascadeClassifier('haar cascade files/haarcascade_righteye_2splits.xml')
-
 
 # Initialize variables for eye detection
 font = cv2.FONT_HERSHEY_COMPLEX_SMALL
 count = 0
 score = 0
-thicc = 2
-rpred = [99]
-lpred = [99]
 
+# Initialize variables for plotting the graph
+moving_count = 0
+stationary_count = 0
 
 # Emotion labels and eye status labels
 labels_dict = {0: 'Angry', 1: 'Disgust', 2: 'Fear', 3: 'Happy', 4: 'Neutral', 5: 'Sad', 6: 'Surprise'}
-label_for_eyes = ['Close', 'Open']
 
-# Initialize counters for movement detection
-stationary_count = 0
-moving_count = 0
-
-# Threshold for movement classification
-movement_threshold = 10
+# Initialize variables for face movement detection
+prev_face_position = None
+state = 'Not moving'
 
 # Function to detect drowsiness
-async def handle_drowziness(frame):
-        drowzy_detect = DrowsinessCheck()
-        drowzy_check = await drowzy_detect.g_vision(frame)  # Call the drowsiness detection function
-        if 'Drowsy' in drowzy_check and not 'Not Drowsy' in drowzy_check:
-            await text_to_speech("Hey you can't sleep during meditation", mixer)
-        elif 'Not Drowsy' in drowzy_check:
-            pass
-        elif str(drowzy_check) == 'False':
-            print('Some error encountered while detecting drowziness.\n Try to restart the app.')
-        else:
-            print('Failed to detect drowsiness.')
-
-
+async def handle_drowsiness(frame, mixer, drowsy_detect):
+    drowsy_check = await drowsy_detect.g_vision(frame)
+    
+    if 'Drowsy' in drowsy_check and 'Not Drowsy' not in drowsy_check:
+        text_to_speech("Hey, you can't sleep during meditation")
+    elif drowsy_check is None:
+        print('Skipping drowsiness check as it is already in progress or not detected.')
+    else:
+        print('Drowsiness not detected.')
 
 # Main loop for detection and prediction
-async def main_loop():
-    global stationary_count, moving_count, font, count, score, thicc, rpred, lpred
+async def main_loop(mixer):
+    global prev_face_position, font, count, score, moving_count, stationary_count
+    movement_threshold = 10
 
-    # Start video capture
-    text_to_speech_sync("Let's start meditating. Opening camera, make yourself ready.", mixer)
+    await text_to_speech_async("Let's start meditating. Opening camera, make yourself ready.")
     video = cv2.VideoCapture(0)
-    blue_field = BlueField()
-    start_point, end_point = blue_field.create_field(video, faceDetect)
+    if not video.isOpened():
+        print("Error: Could not open camera.")
+        return 
+
+    drowsy_detect = DrowsinessCheck()
 
     try:
         frame_count = 0
         while True:
             ret, frame = video.read()
             frame_count += 1
-            print('Camera is opening')
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             # Detect faces
@@ -77,7 +71,11 @@ async def main_loop():
             left_eye = leye.detectMultiScale(gray)
             right_eye = reye.detectMultiScale(gray)
 
+            # Initialize face position for movement detection
+            current_face_position = None
+
             for (x, y, w, h) in faces:
+                current_face_position = (x, y, w, h)
                 sub_face_img = gray[y:y+h, x:x+w]
                 resized_face = cv2.resize(sub_face_img, (48, 48))
                 normalized_face = resized_face / 255.0
@@ -87,102 +85,97 @@ async def main_loop():
             if len(faces) == 0:
                 reshaped_face = np.zeros((1, 48, 48, 1))  # Default blank face if none detected
 
-            # Eye input processing (for the left or right eye)
+            # Eye input processing
             eye_img = None  # Initialize as None
 
             # Process left eye
             for (lx, ly, lw, lh) in left_eye:
                 eye_img = gray[ly:ly+lh, lx:lx+lw]
-                eye_img = cv2.resize(eye_img, (24, 24))  # Resize eye to 24x24
-                eye_img = eye_img / 255.0  # Normalize pixel values
-                eye_img = np.reshape(eye_img, (1, 24, 24, 1))  # Reshape for model input
-                break  # Take the first detected left eye
+                eye_img = cv2.resize(eye_img, (24, 24))
+                eye_img = eye_img / 255.0
+                eye_img = np.reshape(eye_img, (1, 24, 24, 1))
+                break
 
             # If no left eye detected, try right eye
             if eye_img is None:
                 for (rx, ry, rw, rh) in right_eye:
                     eye_img = gray[ry:ry+rh, rx:rx+rw]
-                    eye_img = cv2.resize(eye_img, (24, 24))  # Resize eye to 24x24
-                    eye_img = eye_img / 255.0  # Normalize pixel values
-                    eye_img = np.reshape(eye_img, (1, 24, 24, 1))  # Reshape for model input
-                    break  # Take the first detected right eye
+                    eye_img = cv2.resize(eye_img, (24, 24))
+                    eye_img = eye_img / 255.0
+                    eye_img = np.reshape(eye_img, (1, 24, 24, 1))
+                    break
 
-            # If no eyes detected, set a default eye image (like closed eyes)
             if eye_img is None:
-                eye_img = np.zeros((1, 24, 24, 1))  # If no eye detected, use blank input
+                eye_img = np.zeros((1, 24, 24, 1))
 
             # Model prediction
             emotion_output, eye_output = combined_model.predict([reshaped_face, eye_img])
-            print('Predicting emotions')
-            # Extract the emotion prediction
             emotion_label = np.argmax(emotion_output, axis=1)[0]
             emotion_text = labels_dict[emotion_label]
-            print('emotions predicted')
-            # Extract the eye state prediction
-            eye_state = 'Close' if eye_output[0] < 0.5 else 'Open'  # Adjusted threshold for closed eyes
+            eye_state = 'Close' if eye_output[0] < 0.5 else 'Open'
 
-            # Check for concentration based on eye state
             if eye_state == 'Close':
                 score = max(score - 1, 0)
                 cv2.putText(frame, "Concentrating", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)  
             else:
                 score += 1
                 cv2.putText(frame, "Not Concentrating", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
-            print('Eye state checked')
-            # Trigger alarm if score exceeds threshold
+            score = min(score, 7)
+
             try:
-                print('Checking condition of alarm to be played')
                 if score >= 5:
-                    await text_to_speech('Please concentrate.', mixer)
+                    await text_to_speech_async('Please concentrate.')
             except Exception as e:
                 print(f'Audio error encountered: {e}')
-            print('Alarm checked')
-            # Check movement using BlueField boundary
-            if x < start_point[0] or x + w > end_point[0] or y < start_point[1] or y + h > end_point[1]:
-                moving_count += 1
-                await text_to_speech('Please stop moving.', mixer)  # Trigger speech async
-                state = "Moving"
-                color = (0, 0, 255)  # Red
+
+            # Movement detection logic
+            if current_face_position is not None:
+                (x, y, w, h) = current_face_position
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+                if prev_face_position is not None:
+                    distance = np.linalg.norm(np.array(current_face_position[:2]) - np.array(prev_face_position[:2]))
+
+                    if distance > movement_threshold:
+                        state = 'Moving'
+                        color = (0, 0, 255)
+                        moving_count += 1
+                        await text_to_speech('Please stop moving.')
+                    else:
+                        state = 'Not moving'
+                        color = (0, 255, 0)
+                        stationary_count += 1
+                else:
+                    state = 'Not moving'
+
+                prev_face_position = current_face_position
+
             else:
-                stationary_count += 1
-                state = "Stationary"
-                color = (0, 255, 0)  # Green
-            print('blue field boundary check')
-            
-            print('Drowsiness function executing maybe')
-            if frame_count % 20 == 0:
-                print('Drowsiness function called')
-                await handle_drowziness(frame)
-            
-            
-            # Draw bounding box and display state
-            cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+                state = 'Not moving'
+                prev_face_position = None
 
-            # Display emotion, eye state, and YOLO results
             cv2.putText(frame, f"Emotion: {emotion_text}, Eyes: {eye_state}, State: {state}", (x, y - 30), font, 0.8, (0, 255, 255), 2)
-
-            # Show frame
             cv2.imshow("Frame", frame)
 
-            print('ending part')
-            # Break loop on 'q' key press
+            if frame_count % 30 == 0:
+                await handle_drowsiness(frame, mixer, drowsy_detect)
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 video.release()
                 cv2.destroyAllWindows()
                 break
-        print('program ended')
+
         plot_graph(stationary_count, moving_count)
-        return
+
     except Exception as e:
         print(f'Error Encounter: {e}')
 
-async def app():
+async def app(mixer):
     response = starter(mixer)
     if response == 'started':
-        await main_loop()
-        print('Exited after main loop started.')
+        await main_loop(mixer)
     elif response == '503':
-        print('No internet connectino.')
+        print('No internet connection.')
     elif response == 'error':
         print('Some error encountered.')
     elif response == 'exit':
@@ -191,4 +184,4 @@ async def app():
     else:
         pass
 
-asyncio.run(app())
+asyncio.run(app(mixer))
