@@ -2,6 +2,7 @@ from video_capture import capture_ppg_signal
 from hrv_analysis import calculate_hrv_metrics
 from feedback_system import provide_feedback
 from preprocessing import preprocess_signal
+from realTimeGraph import PlotGraph
 import os
 import time
 
@@ -25,7 +26,7 @@ def monitor_meditation_session(total_duration, interval=30):
         print(f"Interval {i + 1}: RMSSD = {rmssd:.4f}, SDNN = {sdnn:.4f}")
         
         provide_feedback(rmssd, sdnn)
-    
+
         time.sleep(1)
         
     print("Meditation session complete. Thank you for participating!")
@@ -38,5 +39,6 @@ if __name__ == "__main__":
 
         print(f"Starting meditation session for {duration_minutes} minutes with feedback every 30 seconds.")
         monitor_meditation_session(total_duration=total_duration, interval=30)
+        PlotGraph()
     except ValueError:
         print("Invalid input. Please enter a numeric value for the meditation duration.")  
