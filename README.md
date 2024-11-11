@@ -1,6 +1,6 @@
-# meditation_app
+# meditation
 
-An app which helps you to meditate
+Deep Learning powered meditation app
 
 ## Getting Started
 

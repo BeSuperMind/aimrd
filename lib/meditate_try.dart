@@ -4,9 +4,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
-import 'dart:math' as math;
-import 'main.dart';
+import 'package:google_ml_vision/google_ml_vision.dart';
 import 'dart:typed_data';
+import 'main.dart';
 
 class MeditateScreen extends StatefulWidget {
   const MeditateScreen({super.key});
@@ -16,12 +16,13 @@ class MeditateScreen extends StatefulWidget {
 }
 
 class _MeditateScreenState extends State<MeditateScreen> {
-  CameraImage? cameraImage;
   CameraController? cameraController;
   Interpreter? interpreter;
+  FaceDetector faceDetector = GoogleVision.instance.faceDetector();
+  final AudioPlayer _audioPlayer = AudioPlayer();
   List<String>? labels;
   String _output = 'Loading...';
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  CameraImage? cameraImage;
 
   @override
   void initState() {
@@ -31,16 +32,15 @@ class _MeditateScreenState extends State<MeditateScreen> {
   }
 
   Future<void> loadCamera() async {
-    cameras = await availableCameras();
-    cameraController = CameraController(cameras![1], ResolutionPreset.medium);
+    cameraController =
+        CameraController(cameras![1], ResolutionPreset.ultraHigh);
     await cameraController!.initialize();
 
     if (!mounted) return;
     setState(() {
       cameraController!.startImageStream((imageStream) {
         cameraImage = imageStream;
-
-        runModel();
+        detectFaceAndRunModel();
       });
     });
   }
@@ -48,8 +48,7 @@ class _MeditateScreenState extends State<MeditateScreen> {
   Future<void> loadModelAndLabels() async {
     try {
       interpreter = await Interpreter.fromAsset('assets/model.tflite');
-      labels = await loadLabels(
-          'assets/labels.txt'); // Adjust if labels are separate
+      labels = await loadLabels('assets/labels.txt');
     } catch (e) {
       print("Error loading model or labels: $e");
     }
@@ -60,54 +59,78 @@ class _MeditateScreenState extends State<MeditateScreen> {
     return content.split('\n');
   }
 
-  Future<void> runModel() async {
-    if (cameraImage != null && interpreter != null) {
-      // Preprocess the image using the image package
-      final resizedImage = img.copyResize(
-        img.grayscale(img.Image.fromBytes(
-          width: cameraImage!.width,
-          height: cameraImage!.height,
-          bytes: cameraImage!.planes[0].bytes.buffer, // Use buffer property
-        )),
+  Future<void> detectFaceAndRunModel() async {
+    if (cameraImage == null || interpreter == null) return;
+
+    final visionImage = GoogleVisionImage.fromBytes(
+      cameraImage!.planes[0].bytes,
+      buildMetaData(cameraImage!),
+    );
+
+    final faces = await faceDetector.processImage(visionImage);
+
+    if (faces.isNotEmpty) {
+      // Use the first detected face for this example
+      final face = faces[0];
+      final faceBoundingBox = face.boundingBox;
+
+      // Convert face region to img.Image and preprocess for model input
+      final faceImage = img.copyResize(
+        img.Image.fromBytes(
+          width: faceBoundingBox.width.toInt(),
+          height: faceBoundingBox.height.toInt(),
+          bytes: cameraImage!.planes[0].bytes.buffer,
+        ),
         width: 48,
         height: 48,
       );
 
-      // Convert the image to a list of pixel values
       final inputData =
-          resizedImage.getBytes().map((pixel) => pixel / 255.0).toList();
-
-      // Reshape the input data into the expected tensor shape
+          faceImage.getBytes().map((pixel) => pixel / 255.0).toList();
       final inputTensor = Float32List.fromList(inputData);
-
-      // Assuming your model has separate inputs for face and eye:
       var faceInput = inputTensor.sublist(0, 48 * 48);
-      var eyeInput = inputTensor.sublist(48 * 48);
+      var eyeInput = inputTensor.sublist(24 * 24);
 
-      // ... rest of your model inference code ...
-      var outputBuffer =
-          List.filled(7, 0.0); // Adjust based on model output size
+      var outputBuffer = List.filled(7, 0.0);
       interpreter!.run([faceInput, eyeInput], outputBuffer);
 
-      var maxIndex = outputBuffer.indexOf(outputBuffer.reduce(math.max));
+      var maxIndex =
+          outputBuffer.indexOf(outputBuffer.reduce((a, b) => a > b ? a : b));
 
       setState(() {
         _output =
             "${labels![maxIndex]} | Eyes: ${outputBuffer[6] < 0.5 ? 'Closed' : 'Open'}";
       });
 
-      // Play audio based on emotion or eye state (adjust logic as needed)
-      if (outputBuffer[6] < 0.5) {
-        await _audioPlayer.play('assets/audio/concentrate.mp3'
-            as Source); // Replace with your audio filename
+      if (outputBuffer[6] >= 0.5) {
+        await _audioPlayer.play(AssetSource('audio/moving.mp3'));
+      } else if (outputBuffer[6] < 0.5) {
+        await _audioPlayer.play(AssetSource('audio/drowsy.mp3'));
       }
     }
+  }
+
+  GoogleVisionImageMetadata buildMetaData(CameraImage image) {
+    return GoogleVisionImageMetadata(
+      size: Size(image.width.toDouble(), image.height.toDouble()),
+      rotation: ImageRotation.rotation0,
+      planeData: image.planes.map(
+        (plane) {
+          return GoogleVisionImagePlaneMetadata(
+            bytesPerRow: plane.bytesPerRow,
+            height: plane.height,
+            width: plane.width,
+          );
+        },
+      ).toList(),
+    );
   }
 
   @override
   void dispose() {
     cameraController?.dispose();
     interpreter?.close();
+    faceDetector.close();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -116,7 +139,8 @@ class _MeditateScreenState extends State<MeditateScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Live meditation session by QCT'),
+        title: Text('Live meditation session by QCT\n${_output}'),
+        centerTitle: true,
       ),
       body: Column(
         children: [

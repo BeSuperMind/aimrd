@@ -1,7 +1,7 @@
-name: meditation_app
-description: "An app which helps you to meditate"
+name: meditation
+description: "Deep Learning powered meditation app"
 
-publish_to: 'none'
+publish_to: 'none' 
 
 version: 1.0.0+1
 
@@ -11,19 +11,25 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  camera: ^0.11.0+2
+  tflite_flutter: ^0.11.0
+  image: ^4.3.0
   cupertino_icons: ^1.0.8
-  camera: ^0.11.0+2  # Moved to dependencies
-  tflite: ^1.1.2     # Moved to dependencies
-  image_picker: ^1.1.2
+  audioplayers: ^6.1.0
+  google_ml_vision: ^0.0.8
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+
 
 flutter:
-  uses-material-design: true
 
+  uses-material-design: true
   assets:
     - assets/model.tflite
     - assets/label.txt
+    - assets/audio/concentrate.mp3
+    - assets/audio/drowsy.mp3
+    - assets/audio/moving.mp3
+

@@ -1,6 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'meditate.dart'; // Import the meditate file
+import 'meditate_try.dart';
 
 List<CameraDescription>? cameras;
 void main() async {
