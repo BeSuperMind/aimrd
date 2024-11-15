@@ -28,12 +28,11 @@ def monitor_meditation_session(total_duration, interval=30):
     for i in range(intervals):
         print(f"Starting interval {i + 1} of {intervals}")
         
-        # Capture the PPG signal (simulation, replace with actual method)
         ppg_signal = capture_ppg_signal(duration=interval)
         
         # Preprocess the signal and calculate RMSSD, SDNN
-        filtered_ppg_signal = preprocess_signal(ppg_signal)
-        rmssd, sdnn = calculate_hrv_metrics(filtered_ppg_signal)
+        # filtered_ppg_signal = preprocess_signal(ppg_signal)
+        rmssd, sdnn = calculate_hrv_metrics(ppg_signal)
         
         rmssd_values.append(rmssd)
         sdnn_values.append(sdnn)

@@ -35,5 +35,3 @@ def capture_ppg_signal(duration=30, fps=30):
     cv2.destroyAllWindows()
     
     return np.array(signal)
-
-
