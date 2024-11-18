@@ -2,13 +2,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def PlotGraph():
-    file_path = r"C:\Users\sam\CODEs\aimrd\graphHrv.csv"
+    file_path = r"graphHrv.csv"
     df = pd.read_csv(file_path)
 
     fig, ax1 = plt.subplots(figsize=(12, 7))
 
-    # Plot RMSSD values
-    ax1.plot(df.index, df["RMSSD"], label="RMSSD", color="#1f77b4", marker='o', markersize=6, linewidth=2, linestyle='-', alpha=0.8)
+    # Bar graph for RMSSD with thinner bars
+    ax1.bar(df.index, df["RMSSD"], label="RMSSD", color="#1f77b4", alpha=0.8, width=0.4)  # Reduced width
     ax1.set_xlabel("Meditation Duration (Intervals)", fontsize=14, fontweight='bold')
     ax1.set_ylabel("RMSSD Values (ms)", fontsize=14, fontweight='bold', color="#1f77b4")
     ax1.set_title("RMSSD and Stress Condition Over Meditation Duration", fontsize=16, fontweight='bold')
@@ -36,6 +36,4 @@ def PlotGraph():
 
     # Adjust layout
     plt.tight_layout()
-
-    # Display the graph
     plt.show()

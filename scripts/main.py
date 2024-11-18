@@ -12,7 +12,7 @@ from realTimeGraph import PlotGraph
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # File paths for storing the data
-file_path1 = r"C:\Users\sam\CODEs\aimrd\hrv_with_actualCondition.csv"
+file_path1 = r"hrv_with_actualCondition.csv"
 headers = ["RMSSD", "SDNN", "condition", "actualCondition"]
 
 df = pd.DataFrame(columns=headers)
@@ -29,9 +29,6 @@ def monitor_meditation_session(total_duration, interval=30):
         print(f"Starting interval {i + 1} of {intervals}")
         
         ppg_signal = capture_ppg_signal(duration=interval)
-        
-        # Preprocess the signal and calculate RMSSD, SDNN
-        # filtered_ppg_signal = preprocess_signal(ppg_signal)
         rmssd, sdnn = calculate_hrv_metrics(ppg_signal)
         
         rmssd_values.append(rmssd)

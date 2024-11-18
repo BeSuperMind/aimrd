@@ -14,6 +14,7 @@ def capture_ppg_signal(duration=30, fps=30):
         ret, frame = cap.read()
         if not ret:
             break
+          
         
         green_channel = frame[:, :, 1]  
         mean_intensity = np.mean(green_channel)

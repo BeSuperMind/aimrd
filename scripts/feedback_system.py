@@ -24,7 +24,7 @@ def provide_feedback(rmssd, sdnn):
     input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
     prediction = model.predict(input_data)[0]
 
-    # Determine the condition based on the prediction
+  
     if prediction == 1:  
         condition = 1  # Stress detected
         print(f"Stress detected! RMSSD ({rmssd:.2f} ms).")
