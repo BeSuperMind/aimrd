@@ -10,7 +10,7 @@ const MeditationTimer = () => {
   const sessionDuration = useStore((state) => state.sessionDuration);
   const music = useStore((state) => state.music);
   const [timeLeft, setTimeLeft] = useState(sessionDuration * 60);
-  const [isRunning, setIsRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const navigate = useNavigate();
   const audioRef = useRef(null);
@@ -88,9 +88,13 @@ const MeditationTimer = () => {
       <button className="absolute top-6 left-6 text-2xl" onClick={() => navigate(-1)}>
         &larr;
       </button>
+      <VideoStream />
+      <br />
+      <br />
+      <br />
       <h1 className="text-2xl font-bold mb-4">Meditation Timer</h1>
 
-      <div className="relative w-48 h-48 rounded-full overflow-hidden bg-gray-200 shadow-lg">
+      <div className="relative w-36 h-36 rounded-full overflow-hidden bg-gray-200 shadow-lg">
         <div
           className="absolute bottom-0 w-full bg-indigo-500"
           style={{
@@ -117,10 +121,7 @@ const MeditationTimer = () => {
           {isRunning ? 'Pause' : 'Start'}
         </button>
       </div>
-      <div className='flex'>
-        <VideoStream />
-        <VideoStream2 />
-      </div>
+      <VideoStream2 />
     </div>
   );
 };

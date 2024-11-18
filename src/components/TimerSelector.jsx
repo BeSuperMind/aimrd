@@ -40,7 +40,6 @@ const TimerSelector = ({ onStart }) => {
         <h2 className="text-lg font-semibold text-gray-700 mb-4">Select music</h2>
         <div className="flex justify-center gap-4 mb-6">
           <button className="text-2xl text-indigo-500">🎵</button>
-          <button className="text-2xl text-indigo-500">🎼</button>
         </div>
       </div>
 
@@ -56,17 +55,17 @@ const TimerSelector = ({ onStart }) => {
               <p className="text-gray-800">{track}</p>
               <p className="text-sm text-gray-500">Artist . 3.14</p>
             </div>
-            {index === 2 && (
+            {/* {index === 2 && (
               <div className="text-gray-500">
                 ▶
               </div>
-            )}
+            )} */}
           </button>
         ))}
       </div>
 
       <button className="mt-4 text-gray-500 text-sm">See more</button>
-
+      <br />
       <button
         onClick={() => onStart(duration, music)}  // Start session with music
         className="mt-6 bg-indigo-500 text-white px-6 py-3 rounded-full font-medium"

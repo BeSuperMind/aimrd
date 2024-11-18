@@ -117,7 +117,7 @@ const VideoStream = () => {
                     alt="Processed frame"
                 />
             )}
-            {audio && <p>{audio}</p>}
+            {/* {audio && <p>{audio}</p>} */}
         </div>
     );
 };
