@@ -10,7 +10,7 @@ const TimerSelector = ({ onStart }) => {
 
   const handleMusicSelection = (track) => {
     setMusic(track);
-    setStoreMusic(track);  // Only update the music selection in the store
+    setStoreMusic(track);
   };
 
   return (
@@ -25,7 +25,7 @@ const TimerSelector = ({ onStart }) => {
 
       <h2 className="text-lg font-semibold text-gray-700 mb-4">Select time</h2>
       <div className="flex gap-2 flex-wrap mb-6">
-        {[60, 45, 30, 15, 10, 1].map((time) => (
+        {[60, 45, 30, 15, 10, 5, 2, 1].map((time) => (
           <button
             key={time}
             onClick={() => setDuration(time)}

@@ -22,7 +22,7 @@ const VideoStream2 = () => {
     };
 
     useEffect(() => {
-        const ws = new WebSocket("ws://192.168.0.110:8000/ws/heart_rate_variability/");
+        const ws = new WebSocket("ws://192.168.77.121:8000/ws/heart_rate_variability/");
         setSocket(ws);
 
         ws.onopen = () => console.log("WebSocket connected");
@@ -96,7 +96,7 @@ const VideoStream2 = () => {
             if (videoRef.current && socket && socket.readyState === WebSocket.OPEN) {
                 sendFrame();
             }
-        }, 30); // Send frame every 2000 ms
+        }, 30); // Send frame every 30 ms
         return () => clearInterval(interval);
     }, [socket]);
 
@@ -107,13 +107,14 @@ const VideoStream2 = () => {
                 autoPlay
                 playsInline
                 muted
-                style={{ display: "block", width: "640px", height: "480px" }}
+                style={{ display: "none", width: "640px", height: "480px" }}
             />
             <canvas ref={canvasRef} width="640" height="480" style={{ display: "none" }}></canvas>
             {processedFrame && (
                 <img
                     src={`data:image/jpeg;base64,${processedFrame}`}
                     alt="Processed frame"
+                    style={{ display: "none"}}
                 />
             )}
             {audio && <p>{audio}</p>}

@@ -20,7 +20,7 @@ const VideoStream = () => {
     };
 
     useEffect(() => {
-        const ws = new WebSocket("ws://192.168.0.110:8000/ws/deep_learning_analysis/");
+        const ws = new WebSocket("ws://192.168.77.121:8000/ws/deep_learning_analysis/");
         setSocket(ws);
 
         ws.onopen = () => console.log("WebSocket connected");
@@ -29,10 +29,13 @@ const VideoStream = () => {
             if (data.processed_frame) {
                 setProcessedFrame(data.processed_frame);
             }
-            if (data.Audio) {
+            // Only update audio if it's a non-empty string
+            if (data.Audio && data.Audio.trim()) {
                 setAudio(data.Audio);
+            } else {
+                setAudio(null); // Clear the audio state if no valid command is sent
             }
-        };
+        };        
 
         ws.onclose = () => console.log("WebSocket disconnected");
         ws.onerror = (error) => console.error("WebSocket error:", error);
@@ -94,7 +97,7 @@ const VideoStream = () => {
             if (videoRef.current && socket && socket.readyState === WebSocket.OPEN) {
                 sendFrame();
             }
-        }, 2000); // Send frame every 2000 ms
+        }, 1000); // Send frame every 1000 ms
         return () => clearInterval(interval);
     }, [socket]);
 
@@ -105,7 +108,7 @@ const VideoStream = () => {
                 autoPlay
                 playsInline
                 muted
-                style={{ display: "block", width: "640px", height: "480px" }}
+                style={{ display: "none", width: "640px", height: "480px" }}
             />
             <canvas ref={canvasRef} width="640" height="480" style={{ display: "none" }}></canvas>
             {processedFrame && (

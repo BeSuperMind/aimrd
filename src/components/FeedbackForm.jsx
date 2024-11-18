@@ -8,12 +8,11 @@ const FeedbackForm = () => {
   const [joy, setJoy] = useState(0);
   const [peace, setPeace] = useState(5);
   const [neutral, setNeutral] = useState(5);
-  const [wandering, setWandering] = useState(5);
   const navigate = useNavigate();
 
   const handleFeedbackSubmit = () => {
     resetSession();
-    console.log({ joy, peace, neutral, wandering });
+    console.log({ joy, peace, neutral });
     navigate("/main");
   };
 
@@ -76,18 +75,6 @@ const FeedbackForm = () => {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
         </div>
-
-        {/* <div>
-          <label className="block text-sm font-medium mb-1">Wandering</label>
-          <input 
-            type="range" 
-            min="0" 
-            max="10" 
-            value={wandering} 
-            onChange={(e) => setWandering(Number(e.target.value))} 
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
-          />
-        </div> */}
       </div>
 
       <button 
