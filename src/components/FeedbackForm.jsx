@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useStore from '../utils/useStore';
 import { useNavigate } from 'react-router-dom';
+import HRVGraph from './HRVGraph';
 
 const FeedbackForm = () => {
   const resetSession = useStore((state) => state.resetSession);
@@ -13,6 +14,7 @@ const FeedbackForm = () => {
   const handleFeedbackSubmit = () => {
     resetSession();
     console.log({ joy, peace, neutral });
+    
     navigate("/main");
   };
 
@@ -63,6 +65,8 @@ const FeedbackForm = () => {
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
         </div>
+
+        <HRVGraph />
 
         <div>
           <label className="block text-sm font-medium mb-1">Thoughts</label>
