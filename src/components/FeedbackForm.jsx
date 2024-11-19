@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import useStore from '../utils/useStore';
 import { useNavigate } from 'react-router-dom';
 import HRVGraph from './HRVGraph';
@@ -11,11 +11,31 @@ const FeedbackForm = () => {
   const [neutral, setNeutral] = useState(5);
   const navigate = useNavigate();
 
+  // Ref to track if TTS has been triggered
+  const hasSpoken = useRef(false);
+
+  useEffect(() => {
+    // Check if TTS has already been spoken
+    if (!hasSpoken.current) {
+      const utterance = new SpeechSynthesisUtterance(
+        'Gently place your fingers on your eyes and open them'
+      );
+      
+      // Set the speed (rate) of the speech
+      utterance.rate = 0.6;  // Set speed to 0.6
+      
+      // Speak the text
+      speechSynthesis.speak(utterance);
+      
+      // Set flag to true after TTS is spoken
+      hasSpoken.current = true;
+    }
+  }, []); // Empty dependency array ensures it only triggers once when component mounts
+
   const handleFeedbackSubmit = () => {
     resetSession();
     console.log({ joy, peace, neutral });
-    
-    navigate("/main");
+    navigate('/main');
   };
 
   return (
@@ -37,12 +57,12 @@ const FeedbackForm = () => {
       <div className="w-full bg-gray-100 p-4 rounded-xl max-w-md space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Joy</label>
-          <input 
-            type="range" 
-            min="1" 
-            max="5" 
-            value={joy} 
-            onChange={(e) => setJoy(Number(e.target.value))} 
+          <input
+            type="range"
+            min="1"
+            max="5"
+            value={joy}
+            onChange={(e) => setJoy(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
           <div className="flex justify-between mt-2 text-lg">
@@ -56,12 +76,12 @@ const FeedbackForm = () => {
 
         <div>
           <label className="block text-sm font-medium mb-1">Peace</label>
-          <input 
-            type="range" 
-            min="0" 
-            max="10" 
-            value={peace} 
-            onChange={(e) => setPeace(Number(e.target.value))} 
+          <input
+            type="range"
+            min="0"
+            max="10"
+            value={peace}
+            onChange={(e) => setPeace(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
         </div>
@@ -70,20 +90,21 @@ const FeedbackForm = () => {
 
         <div>
           <label className="block text-sm font-medium mb-1">Thoughts</label>
-          <input 
-            type="range" 
-            min="0" 
-            max="10" 
-            value={neutral} 
-            onChange={(e) => setNeutral(Number(e.target.value))} 
+          <input
+            type="range"
+            min="0"
+            max="10"
+            value={neutral}
+            onChange={(e) => setNeutral(Number(e.target.value))}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
           />
         </div>
       </div>
 
-      <button 
-        onClick={handleFeedbackSubmit} 
-        className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg mt-4 hover:bg-blue-600">
+      <button
+        onClick={handleFeedbackSubmit}
+        className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg mt-4 hover:bg-blue-600"
+      >
         Submit Feedback
       </button>
     </div>

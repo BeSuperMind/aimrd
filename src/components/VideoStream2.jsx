@@ -9,12 +9,12 @@ const VideoStream2 = () => {
     const canvasRef = useRef(null);
     const sessionDuration = useStore((state) => state.sessionDuration);
 
-    // Text-to-Speech function
+    // TTS
     const speak = (text) => {
         if ("speechSynthesis" in window) {
             const synth = window.speechSynthesis;
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = "en-US"; // Set the language
+            utterance.lang = "en-US";
             synth.speak(utterance);
         } else {
             console.error("Text-to-Speech not supported in this browser.");
@@ -96,7 +96,7 @@ const VideoStream2 = () => {
             if (videoRef.current && socket && socket.readyState === WebSocket.OPEN) {
                 sendFrame();
             }
-        }, 30); // Send frame every 30 ms
+        }, 30); // Sending frame every 30 ms
         return () => clearInterval(interval);
     }, [socket]);
 
@@ -117,7 +117,7 @@ const VideoStream2 = () => {
                     style={{ display: "none"}}
                 />
             )}
-            {audio && <p>{audio}</p>}
+            {/* {audio && <p>{audio}</p>} */}
         </div>
     );
 };

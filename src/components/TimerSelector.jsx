@@ -25,7 +25,7 @@ const TimerSelector = ({ onStart }) => {
 
       <h2 className="text-lg font-semibold text-gray-700 mb-4">Select time</h2>
       <div className="flex gap-2 flex-wrap mb-6">
-        {[60, 45, 30, 15, 10, 5, 2, 1].map((time) => (
+        {[45, 30, 15, 10, 5, 2].map((time) => (
           <button
             key={time}
             onClick={() => setDuration(time)}
@@ -53,21 +53,13 @@ const TimerSelector = ({ onStart }) => {
           >
             <div>
               <p className="text-gray-800">{track}</p>
-              <p className="text-sm text-gray-500">Artist . 3.14</p>
             </div>
-            {/* {index === 2 && (
-              <div className="text-gray-500">
-                ▶
-              </div>
-            )} */}
           </button>
         ))}
       </div>
-
-      <button className="mt-4 text-gray-500 text-sm">See more</button>
       <br />
       <button
-        onClick={() => onStart(duration, music)}  // Start session with music
+        onClick={() => onStart(duration, music)} 
         className="mt-6 bg-indigo-500 text-white px-6 py-3 rounded-full font-medium"
       >
         Start Session

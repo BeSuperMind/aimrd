@@ -6,18 +6,30 @@ const VideoStream = () => {
     const [audio, setAudio] = useState(null);
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    
+    const hasSpokenIntro = useRef(false); // Flag to check if the intro has been spoken
 
-    // Text-to-Speech function
+    // TTS function to speak the provided text
     const speak = (text) => {
         if ("speechSynthesis" in window) {
             const synth = window.speechSynthesis;
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = "en-US"; // Set the language
+            utterance.lang = "en-US";
             synth.speak(utterance);
         } else {
             console.error("Text-to-Speech not supported in this browser.");
         }
     };
+
+    // Speak initial message when the component mounts
+    useEffect(() => {
+        // Check if the intro has already been spoken
+        if (!hasSpokenIntro.current) {
+            const initialMessage = "Please close your eyes, cross your feet at the ankle, clasp your fingers and place it on your lap and observe your simple, natural breath";
+            speak(initialMessage);
+            hasSpokenIntro.current = true; // Set flag to true after speaking the intro
+        }
+    }, []); // This runs only once when the component is first mounted
 
     useEffect(() => {
         const ws = new WebSocket("ws://192.168.77.121:8000/ws/deep_learning_analysis/");
@@ -29,13 +41,13 @@ const VideoStream = () => {
             if (data.processed_frame) {
                 setProcessedFrame(data.processed_frame);
             }
-            // Only update audio if it's a non-empty string
+
             if (data.Audio && data.Audio.trim()) {
                 setAudio(data.Audio);
             } else {
-                setAudio(null); // Clear the audio state if no valid command is sent
+                setAudio(null);
             }
-        };        
+        };
 
         ws.onclose = () => console.log("WebSocket disconnected");
         ws.onerror = (error) => console.error("WebSocket error:", error);
@@ -97,7 +109,7 @@ const VideoStream = () => {
             if (videoRef.current && socket && socket.readyState === WebSocket.OPEN) {
                 sendFrame();
             }
-        }, 1000); // Send frame every 1000 ms
+        }, 1000); // Sending frame every 1000 ms
         return () => clearInterval(interval);
     }, [socket]);
 
