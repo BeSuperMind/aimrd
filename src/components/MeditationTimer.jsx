@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useStore from '../utils/useStore';
 import { useNavigate } from 'react-router-dom';
-import testMusic from "../assets/ONENESS.mp3";
-import testMusic2 from "../assets/WHOLENESS.mp3";
+import testMusic from "../assets/test.mp3";
+import testMusic2 from "../assets/test2.mp3";
 import VideoStream from './VideoStream';
 import VideoStream2 from './VideoStream2';
 
