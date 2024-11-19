@@ -22,17 +22,28 @@ class Say(APIView):
 @method_decorator(csrf_exempt, name='dispatch')
 class GenerateHRVReport(APIView):
     permission_classes = [AllowAny]
-
+        
     def get(self, request):
         try:
-            # Get RMSSD values from settings
-            rmssd_values = settings.RMSSD
+            # Path to the rmssd.txt file in the static directory
+            file_path = os.path.join(settings.BASE_DIR, 'static', 'rmssd.txt')
+
+            if not os.path.isfile(file_path):
+                return Response(
+                    {"detail": "RMSSD file not found."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # Read RMSSD values from the file
+            with open(file_path, 'r') as file:
+                rmssd_values = [float(line.strip()) for line in file if line.strip()]
+
             print("Received RMSSD values:", rmssd_values)
 
             if not rmssd_values:
                 return Response(
-                    {"detail": "No RMSSD values available."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    {"detail": "No RMSSD values available in the file."},
+                    status=status.HTTP_412_PRECONDITION_FAILED,
                 )
 
             # Generate the graph and get its file path
@@ -45,16 +56,24 @@ class GenerateHRVReport(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
 
-            # Read the file and serve as a response
+            # Read the graph file and serve as a response
             with open(graph_file_path, 'rb') as graph_file:
                 graph_data = graph_file.read()
 
-            # Delete the file after sending the response
+            # Delete the graph file after sending the response
             try:
                 os.remove(graph_file_path)
                 print(f"Deleted graph file: {graph_file_path}")
             except Exception as delete_error:
-                print(f"Error deleting file: {delete_error}")
+                print(f"Error deleting graph file: {delete_error}")
+
+            # Clear the contents of rmssd.txt after processing
+            try:
+                with open(file_path, 'w') as file:
+                    file.truncate(0)
+                print(f"Cleared contents of RMSSD file: {file_path}")
+            except Exception as clear_error:
+                print(f"Error clearing RMSSD file: {clear_error}")
 
             # Return the graph data with appropriate headers
             response = HttpResponse(
@@ -69,3 +88,4 @@ class GenerateHRVReport(APIView):
                 {"detail": f"An error occurred: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+

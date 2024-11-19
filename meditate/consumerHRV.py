@@ -11,6 +11,7 @@ from scipy.signal import find_peaks
 from django.contrib.staticfiles import finders
 import pickle
 import pandas as pd
+from django.conf import settings
 
 class VideoConsumerHRV(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
@@ -21,8 +22,10 @@ class VideoConsumerHRV(AsyncWebsocketConsumer):
         self.signal = []
         self.filtered_signal = []
         self.model_file = finders.find('ppgStress.pkl')
+        print('Loading model HRV')
         with open(self.model_file, 'rb') as file:
             self.model = pickle.load(file)
+            print('Model loaded HRV')
         self.Audio_text = ''
         self.rmssd_values = []
         self.sdnn_values = []
@@ -100,13 +103,25 @@ class VideoConsumerHRV(AsyncWebsocketConsumer):
             self.signal = np.array(self.signal)
             signal_to_process = self.signal
             self.filtered_signal = self.preprocess_signal(signal_to_process)
-            peaks, _ = find_peaks(self.filtered_signal, 7) 
+            peaks, _ = find_peaks(self.filtered_signal, distance=7) 
             ibi = np.diff(peaks) / 30  # Inter-Beat Intervals in seconds
             rmssd = np.sqrt(np.mean(np.square(np.diff(ibi))))  # RMSSD calculation
             sdnn = np.std(ibi)  # SDNN calculation 
 
             self.rmssd_values.append(rmssd)
             self.sdnn_values.append(sdnn)
+
+                
+            # Append RMSSD to a file in static/rmssd.txt
+            file_path = finders.find('rmssd.txt')
+            if file_path:
+                with open(file_path, 'a') as file:
+                    file.write(f'{rmssd}\n')
+                print(f'RMSSD value appended to file: {file_path}')
+            else:
+                print('Error: rmssd.txt file not found in static directory')
+
+            print('RMSSD appended and the list is ' + str(settings.RMSSD))
             self.mode = self.predict_HRV(rmssd, sdnn)
             return  frame , self.mode
         
@@ -125,18 +140,27 @@ class VideoConsumerHRV(AsyncWebsocketConsumer):
     def predict_HRV(self, rmssd, sdnn):
             # Prepare input for the model
         input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
-        prediction = self.model.predict(input_data)[0]
+        print(rmssd)
+        try:
+            model_file = finders.find('ppgStress.pkl')
+            with open(model_file, 'rb') as file:
+                model = pickle.load(file)
+            prediction = model.predict(input_data)[0]
+            # Determine the condition based on the prediction
+            if prediction == 1:  
+                condition = 1  # Stress detected
+                print(f"Stress detected! RMSSD ({rmssd:.2f} ms).")
+                self.Audio_text = 'Keep your attention to your breath'
+                # breathing_guidance()
+            else:
+                print(f"You are calm. RMSSD ({rmssd:.2f} ms). Keep going.")
+                condition = 0  # Calm
 
-        # Determine the condition based on the prediction
-        if prediction == 1:  
-            condition = 1  # Stress detected
-            print(f"Stress detected! RMSSD ({rmssd:.2f} ms).")
-            self.Audio_text = 'Keep your attention to your breath'
-            # breathing_guidance()
-        else:
-            print(f"You are calm. RMSSD ({rmssd:.2f} ms). Keep going.")
-            condition = 0  # Calm
+            return condition, 
+        except Exception as e :
+            print('Error encountered in loading or predicting from the HRV model' + str(e))
+        
 
-        return condition, 
+        
 
    
