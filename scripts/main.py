@@ -6,7 +6,6 @@ import os
 from video_capture import capture_ppg_signal
 from hrv_analysis import calculate_hrv_metrics
 from feedback_system import provide_feedback
-from preprocessing import preprocess_signal
 from realTimeGraph import PlotGraph
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -19,7 +18,8 @@ df = pd.DataFrame(columns=headers)
 df.to_csv("graphHrv.csv", index=False)
 
 
-def monitor_meditation_session(total_duration, interval=30):
+def monitor_meditation_session(total_duration):
+    interval=30
     intervals = total_duration // interval
     conditions = []  # To store conditions for each interval
     rmssd_values = []
@@ -53,7 +53,6 @@ def monitor_meditation_session(total_duration, interval=30):
         except ValueError:
             print("Invalid input. Please enter a numeric value (1 or 0).")
     
-    # Save the collected data including the user's mental state at the end
     save_data(rmssd_values, sdnn_values, conditions, user_state)
 
 def save_data(rmssd_values, sdnn_values, conditions, actual_condition):
@@ -66,13 +65,12 @@ def save_data(rmssd_values, sdnn_values, conditions, actual_condition):
     df.to_csv(file_path1, mode='a', index=False, header=not os.path.exists(file_path1))
     df.to_csv("graphHrv.csv", mode='a', index=False, header=not os.path.exists("graphHrv.csv"))
 
-if __name__ == "__main__":
-    try:
-        duration_minutes = int(input("Enter your meditation duration in minutes: "))
-        total_duration = duration_minutes * 60  
+try:
+     duration_minutes = int(input("Enter your meditation duration in minutes: "))
+     total_duration = duration_minutes * 60  
 
-        print(f"Starting meditation session for {duration_minutes} minutes with feedback every 30 seconds.")
-        monitor_meditation_session(total_duration=total_duration, interval=30)
-        PlotGraph()
-    except ValueError:
-        print("Invalid input. Please enter a numeric value for the meditation duration.")
+     print(f"Starting meditation session for {duration_minutes} minutes with feedback every 30 seconds.")
+     monitor_meditation_session(total_duration,)
+     PlotGraph()
+except ValueError:
+    print("Invalid input. Please enter a numeric value for the meditation duration.")
