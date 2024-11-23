@@ -8,8 +8,7 @@ def PlotGraph():
     
     # Create the main plot
     fig, ax1 = plt.subplots(figsize=(12, 7))
-    
-    # Define bar colors based on stress condition
+  
     bar_colors = ["#1f77b4" if condition == 0 else "#d62728" for condition in df["condition"]]
     
     # Bar plot for RMSSD values with conditional colors

@@ -10,7 +10,6 @@ from realTimeGraph import PlotGraph
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
-# File paths for storing the data
 file_path1 = r"hrv_with_actualCondition.csv"
 headers = ["RMSSD", "SDNN", "condition", "actualCondition"]
 
@@ -24,19 +23,18 @@ def monitor_meditation_session(total_duration):
     conditions = []  # To store conditions for each interval
     rmssd_values = []
     sdnn_values = []
+    
 
     for i in range(intervals):
         print(f"Starting interval {i + 1} of {intervals}")
         
         ppg_signal = capture_ppg_signal(duration=interval)
-        rmssd, sdnn = calculate_hrv_metrics(ppg_signal)
+        rmssd, sdnn,hr_mean = calculate_hrv_metrics(ppg_signal)
         
         rmssd_values.append(rmssd)
         sdnn_values.append(sdnn)
         
         print(f"Interval {i + 1}: RMSSD = {rmssd:.4f}, SDNN = {sdnn:.4f}")
-        
-        # Provide feedback based on the HRV metrics
         condition = provide_feedback(rmssd, sdnn)
         conditions.append(condition)
         

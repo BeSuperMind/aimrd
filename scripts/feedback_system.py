@@ -16,9 +16,9 @@ def provide_feedback(rmssd, sdnn):
     This function provides feedback based on the RMSSD and SDNN values.
     """
     # Convert RMSSD to milliseconds if needed
-    if rmssd < 1: 
-        rmssd = rmssd * 100
-        sdnn = sdnn * 100
+    # if rmssd < 1: 
+    rmssd = rmssd * 100
+    sdnn = sdnn * 100
 
     # Prepare input for the model
     input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
