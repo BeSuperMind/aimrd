@@ -1,4 +1,5 @@
 import pickle
+import joblib
 import time
 import pandas as pd
 import os
@@ -7,37 +8,34 @@ import pyttsx3
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # Load the model
-model_file = 'ppgStress.pkl'
-with open(model_file, 'rb') as file:
-    model = pickle.load(file)
+# model_file = 'ppgStress.pkl'
+# with open(model_file, 'rb') as file:
+#     model = pickle.load(file)
 
-def provide_feedback(rmssd, sdnn):
-    """
-    This function provides feedback based on the RMSSD and SDNN values.
-    """
+loaded_model = joblib.load(r'rfWesad.pkl')
+
+def provide_feedback(rmssd, sdnn,hr_mean):
     # Convert RMSSD to milliseconds if needed
     # if rmssd < 1: 
-    rmssd = rmssd * 100
-    sdnn = sdnn * 100
-
+    rmssd = (rmssd * 1000)/2
+    sdnn = (sdnn * 1000)/2
     # Prepare input for the model
-    input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
-    prediction = model.predict(input_data)[0]
+    # input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
+    # prediction = model.predict(input_data)[0]
 
-  
-    if prediction == 1:  
+    input_data = pd.DataFrame({'HR_mean':[hr_mean],'RMSSD': [rmssd], "SDNN": [sdnn]})
+    prediction = loaded_model.predict(input_data)[0]
+    
+    if prediction == 0:  
         condition = 1  # Stress detected
         print(f"Stress detected! RMSSD ({rmssd:.2f} ms).")
         play_voice_prompt()
         # breathing_guidance()
     else:
-        print(f"You are calm. RMSSD ({rmssd:.2f} ms). Keep going.")
         condition = 0  # Calm
-
     return condition
 
 def play_voice_prompt():
-  
     engine = pyttsx3.init()
     engine.setProperty('rate', 150)    # Speed of speech
     engine.setProperty('volume', 0.8)  # Volume (0.0 to 1.0)

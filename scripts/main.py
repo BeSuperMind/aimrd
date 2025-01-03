@@ -35,7 +35,7 @@ def monitor_meditation_session(total_duration):
         sdnn_values.append(sdnn)
         
         print(f"Interval {i + 1}: RMSSD = {rmssd:.4f}, SDNN = {sdnn:.4f}")
-        condition = provide_feedback(rmssd, sdnn)
+        condition = provide_feedback(rmssd, sdnn, hr_mean)
         conditions.append(condition)
         
         time.sleep(1)  

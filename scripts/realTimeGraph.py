@@ -18,9 +18,6 @@ def PlotGraph():
     ax1.set_xlabel("Meditation Duration (Intervals)", fontsize=14, fontweight='bold')
     ax1.set_ylabel("RMSSD Values (ms)", fontsize=14, fontweight='bold')
     ax1.set_title("RMSSD Over Meditation Duration", fontsize=16, fontweight='bold')
-
-    
-    # Add legend
     calm_patch = plt.Line2D([0], [0], color="#1f77b4", lw=4, label="Calm (Condition = 0)")
     stress_patch = plt.Line2D([0], [0], color="#d62728", lw=4, label="Stressed (Condition = 1)")
     plt.legend(handles=[calm_patch, stress_patch], fontsize=12, loc="upper right")
