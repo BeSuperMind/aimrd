@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 def capture_ppg_signal(duration):     
-    roi=((150, 100, 490, 380))
+    roi=((150, 100, 490, 400))
     fps = 30
     cap = cv2.VideoCapture(0)
     signal = []

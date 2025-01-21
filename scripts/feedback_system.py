@@ -17,8 +17,8 @@ loaded_model = joblib.load(r'rfWesad.pkl')
 def provide_feedback(rmssd, sdnn,hr_mean):
     # Convert RMSSD to milliseconds if needed
     # if rmssd < 1: 
-    rmssd = (rmssd * 1000)/2
-    sdnn = (sdnn * 1000)/2
+    rmssd = (rmssd * 1000)
+    sdnn = (sdnn * 1000)
     # Prepare input for the model
     # input_data = pd.DataFrame({'RMSSD': [rmssd], "SDNN": [sdnn]})
     # prediction = model.predict(input_data)[0]
@@ -34,6 +34,7 @@ def provide_feedback(rmssd, sdnn,hr_mean):
     else:
         condition = 0  # Calm
     return condition
+
 
 def play_voice_prompt():
     engine = pyttsx3.init()
